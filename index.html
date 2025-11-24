@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Escape the Patterns - Inhibition Game (Short Version)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="70" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="70" cy="80" r="2.5" fill="rgba(255,255,255,0.1)"/></svg>');
+        }
+        
+        .header h1 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header .subtitle {
+            font-size: 0.75em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 15px;
+        }
+        
+        .game-instructions {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        
+        .challenge-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin: 15px 0;
+        }
+        
+        .challenge-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .challenge-card h3 {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        
+        .challenge-card p {
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        .opposite-colors-guide {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 15px;
+            border: 2px solid rgba(102, 126, 234, 0.5);
+        }
+
+        .opposite-colors-guide h4 {
+            font-size: 1em;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #333;
+        }
+
+        .color-pairs {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .color-pair {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #333;
+        }
+
+        .color-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 2px solid white;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+
+        .color-red { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+        .color-green { background: linear-gradient(135deg, #51cf66, #37b24d); }
+        .color-blue { background: linear-gradient(135deg, #4dabf7, #339af0); }
+        .color-yellow { background: linear-gradient(135deg, #ffd43b, #fab005); }
+        
+        .text-red { color: #ff6b6b; }
+        .text-green { color: #51cf66; }
+        .text-blue { color: #4dabf7; }
+        .text-yellow { color: #ffd43b; }
+        
+        .game-area {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            position: relative;
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .status-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.75em;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .status-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 10px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .timer-display {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            padding: 6px 12px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            font-weight: bold;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .challenge-instruction {
+            text-align: center;
+            color: white;
+            font-size: 1em;
+            margin: 15px 0;
+            padding: 0 10px;
+            font-weight: 500;
+        }
+        
+        .word-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: white;
+            margin: 20px 0;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            font-size: 0.9em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            touch-action: manipulation;
+            min-width: 100px;
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .color-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-width: 280px;
+            margin: 15px auto;
+        }
+        
+        .color-option {
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 3px solid white;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            touch-action: manipulation;
+        }
+        
+        .color-option:active {
+            transform: scale(0.95);
+        }
+        
+        .game-feedback {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1em;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .lives-display {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .results-panel {
+            padding: 15px;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result-title {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .result-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .performance-badge {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            margin: 15px 0;
+        }
+        
+        .performance-badge h3 {
+            font-size: 1.2em;
+            margin-bottom: 8px;
+        }
+        
+        .performance-badge p {
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+        
+        .cognitive-metrics {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+        }
+        
+        .metric-label {
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .metric-value {
+            font-size: 0.95em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .improvement-tips {
+            background: linear-gradient(135deg, rgba(240, 147, 251, 0.1), rgba(245, 87, 108, 0.1));
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .improvement-tips h4 {
+            font-size: 1em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .challenge-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            margin: 5px 0;
+            font-size: 0.8em;
+        }
+
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 1.2em;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.8em;
+                min-width: 90px;
+            }
+            
+            .word-display {
+                font-size: 2em;
+                min-height: 70px;
+            }
+            
+            .challenge-instruction {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen">
+            <div class="header">
+                <h1>🧠 Escape the Patterns</h1>
+                <p style="margin: 5px 0; font-size: 0.9em;">Cognitive Inhibition Game</p>
+                <p class="subtitle">Short Version - 7 Levels</p>
+            </div>
+            <div class="content">
+                <div class="game-instructions">
+                    <h2 style="font-size: 1.2em; margin-bottom: 10px;">🎯 Your Mission</h2>
+                    <p style="font-size: 0.85em;">Resist your automatic responses! Always do <strong>the opposite</strong> of what your brain naturally tells you.</p>
+                </div>
+                
+                <div class="challenge-grid">
+                    <div class="challenge-card">
+                        <h3>🔄 Antonym Challenge</h3>
+                        <p>Word displayed: HOT<br>Click on: COLD<br>(Choose the opposite!)</p>
+                    </div>
+                    
+                    <div class="challenge-card">
+                        <h3>🎨 Inverse Colors</h3>
+                        <p>Click on the <strong>opposite</strong> color<br>Red ↔ Green<br>Blue ↔ Yellow</p>
+                        <div class="opposite-colors-guide">
+                            <h4>Pairs to remember:</h4>
+                            <div class="color-pairs">
+                                <div class="color-pair">
+                                    <div class="color-box color-red"></div>
+                                    <span>↔</span>
+                                    <div class="color-box color-green"></div>
+                                </div>
+                                <div class="color-pair">
+                                    <div class="color-box color-blue"></div>
+                                    <span>↔</span>
+                                    <div class="color-box color-yellow"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="challenge-card">
+                        <h3>📝 Stroop Test</h3>
+                        <p>Identify the <strong>ink color</strong><br>Ignore the written word!</p>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="startGame()">🚀 Start</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Screen -->
+        <div id="game-screen" class="hidden">
+            <div class="header">
+                <h1>🧠 Escape the Patterns</h1>
+            </div>
+            <div class="content">
+                <div class="game-area">
+                    <div class="status-panel">
+                        <div class="status-item">
+                            <div class="lives-display">
+                                <span id="lives-hearts"></span>
+                            </div>
+                        </div>
+                        <div class="timer-display">
+                            ⏱️ <span id="timer-display">0.0s</span>
+                        </div>
+                        <div class="status-item">
+                            Lvl: <span id="current-level">1</span>
+                        </div>
+                        <div class="status-item">
+                            Score: <span id="current-score">0</span>
+                        </div>
+                    </div>
+                    
+                    <div id="game-content"></div>
+                    
+                    <div id="game-feedback" class="game-feedback"></div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="next-btn" class="btn btn-success hidden" onclick="nextChallenge()">Next ➔</button>
+                    <button class="btn btn-danger" onclick="quitGame()">Quit</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden">
+            <div class="header">
+                <h1>📊 Results</h1>
+            </div>
+            <div class="results-panel">
+                <div class="performance-badge" id="performance-level">
+                    <h3>Performance</h3>
+                    <p id="performance-text"></p>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-title">Final Score</div>
+                    <div class="result-value" id="final-score">0</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-title">Success Rate</div>
+                    <div class="result-value" id="success-rate">0%</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-title">Maximum Level Reached</div>
+                    <div class="result-value" id="max-level">1</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-title">Inhibition Errors</div>
+                    <div class="result-value" id="inhibition-errors">0</div>
+                </div>
+                
+                <div style="margin: 15px 0;">
+                    <h4 style="font-size: 0.95em; color: #333; margin-bottom: 8px;">📈 Performance by Challenge</h4>
+                    <div class="challenge-detail">
+                        <span>🔄 Antonyms</span>
+                        <span id="antonym-performance">0%</span>
+                    </div>
+                    <div class="challenge-detail">
+                        <span>🎨 Inverse Colors</span>
+                        <span id="color-inverse-performance">0%</span>
+                    </div>
+                    <div class="challenge-detail">
+                        <span>📝 Stroop Test</span>
+                        <span id="stroop-performance">0%</span>
+                    </div>
+                </div>
+                
+                <div style="margin: 15px 0;">
+                    <h4 style="font-size: 0.95em; color: #333; margin-bottom: 8px;">⏱️ Average Response Times</h4>
+                    <div class="challenge-detail">
+                        <span>🔄 Antonyms</span>
+                        <span id="antonym-time">-</span>
+                    </div>
+                    <div class="challenge-detail">
+                        <span>🎨 Inverse Colors</span>
+                        <span id="color-inverse-time">-</span>
+                    </div>
+                    <div class="challenge-detail">
+                        <span>📝 Stroop Test</span>
+                        <span id="stroop-time">-</span>
+                    </div>
+                </div>
+                
+                <div class="cognitive-metrics">
+                    <h4 style="font-size: 0.95em; color: #333; margin-bottom: 8px;">🧠 Cognitive Abilities</h4>
+                    <div class="metric-row">
+                        <span class="metric-label">Resistance to automatisms</span>
+                        <span class="metric-value" id="automatism-resistance">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Cognitive flexibility</span>
+                        <span class="metric-value" id="cognitive-flexibility">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Attentional control</span>
+                        <span class="metric-value" id="attention-control">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Inhibition speed</span>
+                        <span class="metric-value" id="inhibition-speed">-</span>
+                    </div>
+                </div>
+                
+                <div class="improvement-tips" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border-left: 4px solid #667eea;">
+                    <h4>🔬 Clinical Analysis</h4>
+                    <div id="clinical-analysis" style="font-size: 0.8em; line-height: 1.6; color: #666;"></div>
+                </div>
+                
+                <div class="improvement-tips">
+                    <h4>💡 Improvement Tips</h4>
+                    <div id="improvement-tips" style="font-size: 0.8em; line-height: 1.6; color: #666;"></div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="restartGame()">🔄 Play Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let currentLevel = 1;
+        let currentScore = 0;
+        let lives = 3;
+        let challengeIndex = 0;
+        const MAX_LEVELS = 7;
+        const STARTING_LIVES = 3;
+        
+        // Timer variables
+        let challengeStartTime = 0;
+        let timerInterval = null;
+        
+        const challenges = ['antonym', 'color-inverse', 'stroop'];
+        
+        let gameStats = {
+            totalAttempts: 0,
+            successfulAttempts: 0,
+            inhibitionErrors: 0,
+            antonymChallenges: { 
+                attempts: 0, 
+                success: 0,
+                responseTimes: []
+            },
+            colorInverseChallenges: { 
+                attempts: 0, 
+                success: 0,
+                responseTimes: []
+            },
+            stroopChallenges: { 
+                attempts: 0, 
+                success: 0,
+                responseTimes: []
+            }
+        };
+        
+        // Antonym pairs
+        const antonymPairs = [
+            ['HOT', 'COLD'], ['HIGH', 'LOW'], ['BIG', 'SMALL'],
+            ['STRONG', 'WEAK'], ['FAST', 'SLOW'], ['DAY', 'NIGHT'],
+            ['OPEN', 'CLOSED'], ['FULL', 'EMPTY'], ['START', 'END'],
+            ['RICH', 'POOR'], ['YOUNG', 'OLD'], ['LIGHT', 'DARK'],
+            ['HARD', 'SOFT'], ['EASY', 'DIFFICULT'], ['CLEAN', 'DIRTY'],
+            ['HEAVY', 'LIGHT'], ['LONG', 'SHORT'], ['WIDE', 'NARROW']
+        ];
+        
+        // Color pairs and words for Stroop test
+        const colors = ['red', 'green', 'blue', 'yellow'];
+        const colorClasses = ['color-red', 'color-green', 'color-blue', 'color-yellow'];
+        
+        function startGame() {
+            currentLevel = 1;
+            currentScore = 0;
+            lives = STARTING_LIVES;
+            challengeIndex = 0;
+            
+            stopTimer();
+            
+            gameStats = {
+                totalAttempts: 0,
+                successfulAttempts: 0,
+                inhibitionErrors: 0,
+                antonymChallenges: { 
+                    attempts: 0, 
+                    success: 0,
+                    responseTimes: []
+                },
+                colorInverseChallenges: { 
+                    attempts: 0, 
+                    success: 0,
+                    responseTimes: []
+                },
+                stroopChallenges: { 
+                    attempts: 0, 
+                    success: 0,
+                    responseTimes: []
+                }
+            };
+            
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            updateUI();
+            startAntonymChallenge();
+        }
+        
+        function updateUI() {
+            document.getElementById('current-level').textContent = currentLevel;
+            document.getElementById('current-score').textContent = currentScore;
+            
+            const heartsContainer = document.getElementById('lives-hearts');
+            heartsContainer.innerHTML = '❤️'.repeat(lives) + '🖤'.repeat(STARTING_LIVES - lives);
+        }
+        
+        function startTimer() {
+            challengeStartTime = Date.now();
+            stopTimer();
+            
+            document.getElementById('timer-display').textContent = '0.0s';
+            
+            timerInterval = setInterval(() => {
+                const elapsed = (Date.now() - challengeStartTime) / 1000;
+                document.getElementById('timer-display').textContent = elapsed.toFixed(1) + 's';
+            }, 100);
+        }
+        
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+        
+        function getResponseTime() {
+            stopTimer();
+            return (Date.now() - challengeStartTime) / 1000;
+        }
+        
+        function startAntonymChallenge() {
+            const pair = antonymPairs[Math.floor(Math.random() * antonymPairs.length)];
+            const displayedWord = pair[0];
+            const correctAnswer = pair[1];
+            
+            const shuffledOptions = [...pair].sort(() => Math.random() - 0.5);
+            
+            const content = `
+                <div class="challenge-instruction">
+                    🔄 Click on the ANTONYM<br>(the opposite of the displayed word)
+                </div>
+                <div class="word-display">${displayedWord}</div>
+                <div class="button-group">
+                    ${shuffledOptions.map(word => 
+                        `<button class="btn btn-secondary" onclick="checkAntonym('${word}', '${displayedWord}', '${correctAnswer}')">${word}</button>`
+                    ).join('')}
+                </div>
+            `;
+            
+            document.getElementById('game-content').innerHTML = content;
+            startTimer();
+        }
+        
+        function checkAntonym(selected, displayed, correct) {
+            const responseTime = getResponseTime();
+            
+            gameStats.totalAttempts++;
+            gameStats.antonymChallenges.attempts++;
+            gameStats.antonymChallenges.responseTimes.push(responseTime);
+            
+            if (selected === correct) {
+                gameStats.successfulAttempts++;
+                gameStats.antonymChallenges.success++;
+                handleSuccess('✅ Perfect! You resisted the automatic response!');
+            } else if (selected === displayed) {
+                gameStats.inhibitionErrors++;
+                handleError('❌ Inhibition error! You clicked the displayed word instead of its opposite.');
+            } else {
+                handleError('❌ Wrong answer. The antonym of ' + displayed + ' is ' + correct);
+            }
+        }
+        
+        function startColorInverseChallenge() {
+            const colorIndex = Math.floor(Math.random() * colors.length);
+            let oppositeIndex;
+            
+            if (colorIndex === 0) oppositeIndex = 1;
+            else if (colorIndex === 1) oppositeIndex = 0;
+            else if (colorIndex === 2) oppositeIndex = 3;
+            else oppositeIndex = 2;
+            
+            const displayedColor = colors[colorIndex];
+            const displayedColorClass = colorClasses[colorIndex];
+            const oppositeColor = colors[oppositeIndex];
+            
+            const content = `
+                <div class="challenge-instruction">
+                    🎨 Click on the OPPOSITE color<br>
+                    (Red↔Green, Blue↔Yellow)
+                </div>
+                <div style="width: 140px; height: 140px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.1); border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.3); margin: 15px auto;">
+                    <div class="color-box ${displayedColorClass}" style="width: 80px; height: 80px;"></div>
+                </div>
+                <div class="color-options">
+                    ${colors.map((color, idx) => 
+                        `<div class="color-option ${colorClasses[idx]}" onclick="checkColorInverse('${color}', '${displayedColor}', '${oppositeColor}')">${color.toUpperCase()}</div>`
+                    ).join('')}
+                </div>
+            `;
+            
+            document.getElementById('game-content').innerHTML = content;
+            startTimer();
+        }
+        
+        function checkColorInverse(selected, displayed, correct) {
+            const responseTime = getResponseTime();
+            
+            gameStats.totalAttempts++;
+            gameStats.colorInverseChallenges.attempts++;
+            gameStats.colorInverseChallenges.responseTimes.push(responseTime);
+            
+            if (selected === correct) {
+                gameStats.successfulAttempts++;
+                gameStats.colorInverseChallenges.success++;
+                handleSuccess('✅ Excellent! You found the opposite color!');
+            } else if (selected === displayed) {
+                gameStats.inhibitionErrors++;
+                handleError('❌ Inhibition error! You clicked the displayed color.');
+            } else {
+                handleError('❌ Wrong answer. The opposite of ' + displayed + ' is ' + correct);
+            }
+        }
+        
+        function startStroopChallenge() {
+            const wordIndex = Math.floor(Math.random() * colors.length);
+            let colorIndex = Math.floor(Math.random() * colors.length);
+            
+            while (wordIndex === colorIndex) {
+                colorIndex = Math.floor(Math.random() * colors.length);
+            }
+            
+            const word = colors[wordIndex];
+            const inkColor = colors[colorIndex];
+            const textColorClass = 'text-' + inkColor;
+            
+            const content = `
+                <div class="challenge-instruction">
+                    📝 What is the INK COLOR?<br>
+                    (Ignore the written word!)
+                </div>
+                <div style="text-align: center; margin: 30px 0;">
+                    <span class="${textColorClass}" style="font-size: 3em; font-weight: bold;">${word.toUpperCase()}</span>
+                </div>
+                <div class="color-options">
+                    ${colors.map((color, idx) => 
+                        `<div class="color-option ${colorClasses[idx]}" onclick="checkStroop('${color}', '${word}', '${inkColor}')">${color.toUpperCase()}</div>`
+                    ).join('')}
+                </div>
+            `;
+            
+            document.getElementById('game-content').innerHTML = content;
+            startTimer();
+        }
+        
+        function checkStroop(selected, word, correctInkColor) {
+            const responseTime = getResponseTime();
+            
+            gameStats.totalAttempts++;
+            gameStats.stroopChallenges.attempts++;
+            gameStats.stroopChallenges.responseTimes.push(responseTime);
+            
+            if (selected === correctInkColor) {
+                gameStats.successfulAttempts++;
+                gameStats.stroopChallenges.success++;
+                handleSuccess('✅ Perfect! You ignored the word and identified the ink color!');
+            } else if (selected === word) {
+                gameStats.inhibitionErrors++;
+                handleError('❌ Inhibition error! You read the word instead of identifying the ink color.');
+            } else {
+                handleError('❌ Wrong answer. The ink color was ' + correctInkColor);
+            }
+        }
+        
+        function handleSuccess(message) {
+            currentScore += 100 * currentLevel;
+            showFeedback(message, 'success');
+            updateUI();
+            
+            setTimeout(() => {
+                document.getElementById('next-btn').classList.remove('hidden');
+            }, 1500);
+        }
+        
+        function handleError(message) {
+            lives--;
+            showFeedback(message, 'error');
+            updateUI();
+            
+            if (lives <= 0) {
+                setTimeout(() => {
+                    endGame(false);
+                }, 2000);
+            } else {
+                setTimeout(() => {
+                    document.getElementById('next-btn').classList.remove('hidden');
+                }, 1500);
+            }
+        }
+        
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('game-feedback');
+            feedback.textContent = message;
+            
+            switch(type) {
+                case 'success':
+                    feedback.style.color = '#00d4aa';
+                    break;
+                case 'error':
+                    feedback.style.color = '#ff6b6b';
+                    break;
+                default:
+                    feedback.style.color = '#ffffff';
+            }
+            
+            feedback.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                feedback.style.transform = 'scale(1)';
+            }, 300);
+        }
+        
+        function nextChallenge() {
+            stopTimer();
+            document.getElementById('game-feedback').textContent = '';
+            document.getElementById('next-btn').classList.add('hidden');
+            
+            challengeIndex = (challengeIndex + 1) % challenges.length;
+            
+            if (challengeIndex === 0) {
+                currentLevel++;
+                updateUI();
+                
+                if (currentLevel > MAX_LEVELS) {
+                    setTimeout(() => {
+                        endGame(true);
+                    }, 1000);
+                    return;
+                }
+            }
+            
+            switch (challenges[challengeIndex]) {
+                case 'antonym':
+                    startAntonymChallenge();
+                    break;
+                case 'color-inverse':
+                    startColorInverseChallenge();
+                    break;
+                case 'stroop':
+                    startStroopChallenge();
+                    break;
+            }
+        }
+        
+        function quitGame() {
+            endGame(false);
+        }
+        
+        function endGame(completedAllLevels = false) {
+            stopTimer();
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+            calculateResults(completedAllLevels);
+        }
+        
+        function calculateResults(completedAllLevels = false) {
+            const successRate = gameStats.totalAttempts > 0 ? 
+                Math.round((gameStats.successfulAttempts / gameStats.totalAttempts) * 100) : 0;
+            
+            const antonymRate = gameStats.antonymChallenges.attempts > 0 ?
+                Math.round((gameStats.antonymChallenges.success / gameStats.antonymChallenges.attempts) * 100) : 0;
+            
+            const colorInverseRate = gameStats.colorInverseChallenges.attempts > 0 ?
+                Math.round((gameStats.colorInverseChallenges.success / gameStats.colorInverseChallenges.attempts) * 100) : 0;
+            
+            const stroopRate = gameStats.stroopChallenges.attempts > 0 ?
+                Math.round((gameStats.stroopChallenges.success / gameStats.stroopChallenges.attempts) * 100) : 0;
+            
+            const antonymAvgTime = calculateAverage(gameStats.antonymChallenges.responseTimes);
+            const colorInverseAvgTime = calculateAverage(gameStats.colorInverseChallenges.responseTimes);
+            const stroopAvgTime = calculateAverage(gameStats.stroopChallenges.responseTimes);
+            const overallAvgTime = calculateAverage([
+                ...gameStats.antonymChallenges.responseTimes,
+                ...gameStats.colorInverseChallenges.responseTimes,
+                ...gameStats.stroopChallenges.responseTimes
+            ]);
+            
+            document.getElementById('final-score').textContent = currentScore;
+            document.getElementById('success-rate').textContent = successRate + '%';
+            document.getElementById('inhibition-errors').textContent = gameStats.inhibitionErrors;
+            document.getElementById('max-level').textContent = currentLevel;
+            
+            document.getElementById('antonym-performance').textContent = `${antonymRate}% (${gameStats.antonymChallenges.success}/${gameStats.antonymChallenges.attempts})`;
+            document.getElementById('color-inverse-performance').textContent = `${colorInverseRate}% (${gameStats.colorInverseChallenges.success}/${gameStats.colorInverseChallenges.attempts})`;
+            document.getElementById('stroop-performance').textContent = `${stroopRate}% (${gameStats.stroopChallenges.success}/${gameStats.stroopChallenges.attempts})`;
+            
+            document.getElementById('antonym-time').textContent = antonymAvgTime > 0 ? antonymAvgTime.toFixed(2) + 's' : '-';
+            document.getElementById('color-inverse-time').textContent = colorInverseAvgTime > 0 ? colorInverseAvgTime.toFixed(2) + 's' : '-';
+            document.getElementById('stroop-time').textContent = stroopAvgTime > 0 ? stroopAvgTime.toFixed(2) + 's' : '-';
+            
+            let performanceLevel = '';
+            let performanceText = '';
+            
+            if (completedAllLevels) {
+                performanceLevel = '🎉 CHAMPION - 7 LEVELS COMPLETED! 🎉';
+                performanceText = 'EXCELLENT! You completed all 7 levels! Your inhibitory control is very good.';
+            } else if (successRate >= 80) {
+                performanceLevel = '🏆 Exceptional Mastery';
+                performanceText = 'Your inhibitory control is remarkable! You effectively resist automatic responses.';
+            } else if (successRate >= 60) {
+                performanceLevel = '🥈 Good Control';
+                performanceText = 'You show good ability to resist automatic patterns.';
+            } else if (successRate >= 40) {
+                performanceLevel = '🥉 Progressing';
+                performanceText = 'Your brain is starting to develop resistance to automatic responses.';
+            } else {
+                performanceLevel = '📈 Beginner';
+                performanceText = 'Keep practicing! Cognitive inhibition improves with practice.';
+            }
+            
+            document.getElementById('performance-level').querySelector('h3').textContent = performanceLevel;
+            document.getElementById('performance-text').textContent = performanceText;
+            
+            document.getElementById('automatism-resistance').textContent = getResistanceLevel(gameStats.inhibitionErrors);
+            document.getElementById('cognitive-flexibility').textContent = getFlexibilityLevel(successRate);
+            document.getElementById('attention-control').textContent = getAttentionLevel(currentLevel);
+            document.getElementById('inhibition-speed').textContent = getInhibitionSpeed(overallAvgTime);
+            
+            generateClinicalAnalysis(overallAvgTime, antonymAvgTime, colorInverseAvgTime, stroopAvgTime, gameStats.inhibitionErrors, successRate);
+            generateImprovementTips(successRate, gameStats.inhibitionErrors);
+        }
+        
+        function calculateAverage(times) {
+            if (times.length === 0) return 0;
+            const sum = times.reduce((a, b) => a + b, 0);
+            return sum / times.length;
+        }
+        
+        function getInhibitionSpeed(avgTime) {
+            if (avgTime === 0) return '-';
+            if (avgTime < 2.0) return 'Very fast';
+            if (avgTime < 3.0) return 'Fast';
+            if (avgTime < 4.5) return 'Normal';
+            if (avgTime < 6.0) return 'Slow';
+            return 'Very slow';
+        }
+        
+        function generateClinicalAnalysis(overallAvgTime, antonymAvgTime, colorInverseAvgTime, stroopAvgTime, errors, successRate) {
+            const analysis = [];
+            
+            analysis.push('<strong>📊 Response Time Interpretation:</strong><br>');
+            
+            if (overallAvgTime < 2.5) {
+                analysis.push('• Overall <strong>fast</strong> response time (< 2.5s): excellent inhibitory control with efficient cognitive processing.<br>');
+            } else if (overallAvgTime < 4.0) {
+                analysis.push('• Response time <strong>within normal range</strong> (2.5-4s): functional inhibitory control with moderate cognitive effort.<br>');
+            } else if (overallAvgTime < 6.0) {
+                analysis.push('• <strong>Slightly prolonged</strong> response time (4-6s): inhibition requires significant cognitive effort. This suggests difficulty inhibiting automatic responses.<br>');
+            } else {
+                analysis.push('• <strong>Very prolonged</strong> response time (> 6s): cognitive inhibition demands considerable effort. Regular practice is recommended to automate the inhibition process.<br>');
+            }
+            
+            const times = [
+                { name: 'Antonyms', time: antonymAvgTime },
+                { name: 'Inverse colors', time: colorInverseAvgTime },
+                { name: 'Stroop test', time: stroopAvgTime }
+            ].filter(t => t.time > 0).sort((a, b) => b.time - a.time);
+            
+            if (times.length > 0) {
+                analysis.push('<br><strong>🎯 Areas to Work On:</strong><br>');
+                const slowest = times[0];
+                
+                if (slowest.name === 'Stroop test' && slowest.time > 4.0) {
+                    analysis.push('• The Stroop test is your slowest challenge. This indicates difficulty inhibiting automatic reading. Practice focusing only on visual characteristics (color) while ignoring semantic content (word).<br>');
+                } else if (slowest.name === 'Antonyms' && slowest.time > 4.0) {
+                    analysis.push('• Antonyms require more time. This suggests that inhibiting the obvious response (displayed word) and actively searching for its opposite demands significant effort. Practice rapid association of antonym pairs.<br>');
+                } else if (slowest.name === 'Inverse colors' && slowest.time > 4.0) {
+                    analysis.push('• Inverse colors are your difficulty point. Work on memorizing the pairs (red↔green, blue↔yellow) to automate the inversion process.<br>');
+                }
+            }
+            
+            if (errors > 3 && overallAvgTime < 3.0) {
+                analysis.push('<br>• ⚠️ <strong>Impulsive profile</strong>: You respond quickly but make several errors. Slow down your response time to improve accuracy.<br>');
+            } else if (errors <= 2 && overallAvgTime > 5.0) {
+                analysis.push('<br>• 🎯 <strong>Reflective profile</strong>: You take the necessary time and make few errors. Excellent!<br>');
+            } else if (errors > 3 && overallAvgTime > 5.0) {
+                analysis.push('<br>• 💪 <strong>Need for training</strong>: Cognitive inhibition still requires development. Practice regularly.<br>');
+            }
+            
+            document.getElementById('clinical-analysis').innerHTML = analysis.join('');
+        }
+        
+        function getResistanceLevel(errors) {
+            if (errors <= 1) return 'Excellent';
+            if (errors <= 3) return 'Good';
+            if (errors <= 5) return 'Moderate';
+            return 'To develop';
+        }
+        
+        function getFlexibilityLevel(rate) {
+            if (rate >= 80) return 'Very high';
+            if (rate >= 60) return 'High';
+            if (rate >= 40) return 'Moderate';
+            return 'To improve';
+        }
+        
+        function getAttentionLevel(level) {
+            if (level >= 7) return 'Exceptional';
+            if (level >= 5) return 'Excellent';
+            if (level >= 4) return 'Very good';
+            if (level >= 3) return 'Good';
+            return 'Satisfactory';
+        }
+        
+        function generateImprovementTips(successRate, errors) {
+            const tips = [];
+            
+            if (errors > 3) {
+                tips.push('• Take more time before reacting');
+            }
+            
+            if (successRate < 60) {
+                tips.push('• Read the instructions carefully');
+                tips.push('• Focus on the opposite of your first impulse');
+            }
+            
+            if (gameStats.antonymChallenges.attempts > 0 && 
+                gameStats.antonymChallenges.success / gameStats.antonymChallenges.attempts < 0.7) {
+                tips.push('• Antonyms: resist the displayed word, look for its opposite');
+            }
+            
+            if (gameStats.colorInverseChallenges.attempts > 0 && 
+                gameStats.colorInverseChallenges.success / gameStats.colorInverseChallenges.attempts < 0.7) {
+                tips.push('• Colors: memorize the pairs (red↔green, blue↔yellow)');
+            }
+            
+            if (gameStats.stroopChallenges.attempts > 0 && 
+                gameStats.stroopChallenges.success / gameStats.stroopChallenges.attempts < 0.7) {
+                tips.push('• Stroop: focus only on the ink color');
+            }
+            
+            tips.push('• Practice regularly to improve your cognitive inhibition');
+            
+            const tipsList = document.getElementById('improvement-tips');
+            tipsList.innerHTML = tips.slice(0, 5).join('<br>');
+        }
+        
+        function restartGame() {
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('welcome-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
